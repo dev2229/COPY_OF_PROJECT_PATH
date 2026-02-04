@@ -2,37 +2,19 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { UserPreferences, ProjectSummary, ProjectDeepDive, SkillLevel } from "../types.ts";
 
-/**
- * Robustly parses and repairs JSON from Gemini model output.
- */
 function robustJsonParse(text: string): any {
   let clean = text.trim();
-
-  // Strip Markdown markers if present
   if (clean.startsWith("```")) {
     clean = clean.replace(/^```json\s*|\s*```$/g, "");
   }
-
-  // Simple auto-balancing for truncated JSON responses
-  let openBraces = (clean.match(/\{/g) || []).length;
-  let closeBraces = (clean.match(/\}/g) || []).length;
-  while (openBraces > closeBraces) { clean += "}"; closeBraces++; }
-
-  let openBrackets = (clean.match(/\[/g) || []).length;
-  let closeBrackets = (clean.match(/\]/g) || []).length;
-  while (openBrackets > closeBrackets) { clean += "]"; closeBrackets++; }
-
   try {
     return JSON.parse(clean);
   } catch (e) {
     console.error("JSON Parse Error. Raw content:", text);
-    throw new Error("The AI returned a blueprint that was too complex to parse. Please try adjusting your parameters.");
+    throw new Error("The blueprint generation was interrupted. Please try again.");
   }
 }
 
-/**
- * Ensures the GoogleGenAI instance is created with the most recent API key.
- */
 function getAiClient(): GoogleGenAI {
   const apiKey = process.env.API_KEY;
   if (!apiKey || apiKey === "undefined") {
@@ -41,19 +23,11 @@ function getAiClient(): GoogleGenAI {
   return new GoogleGenAI({ apiKey });
 }
 
-/**
- * Generates 4 tailored project ideas based on student preferences.
- * Now strictly enforces Difficulty based on Skill Level:
- * Beginner -> Easy
- * Intermediate -> Medium
- * Advanced -> Hard
- */
 export async function generateProjectSummaries(
   prefs: UserPreferences
 ): Promise<ProjectSummary[]> {
   const ai = getAiClient();
 
-  // Map SkillLevel to specific Difficulty string
   const difficultyMap: Record<string, string> = {
     [SkillLevel.BEGINNER]: 'Easy',
     [SkillLevel.INTERMEDIATE]: 'Medium',
@@ -62,21 +36,15 @@ export async function generateProjectSummaries(
   const targetDifficulty = difficultyMap[prefs.skillLevel] || 'Medium';
 
   const prompt = `
-You are a Senior Engineering Project Architect. Generate exactly 4 unique project ideas for a student:
-- Semester: ${prefs.semester}
-- Branch: ${prefs.branch}
-- Domain: ${prefs.domain}
-- Skill Level: ${prefs.skillLevel}
+You are the "ProjectPath Senior Academic Mentor". Your mission is to help a ${prefs.semester}th-semester ${prefs.branch} student succeed.
+Domain: ${prefs.domain}
+Student Skill Level: ${prefs.skillLevel} (Target Difficulty: ${targetDifficulty})
 
-STRICT REQUIREMENT:
-The project difficulty for all 4 ideas MUST be exactly "${targetDifficulty}". 
-- Do NOT generate "Medium" or "Hard" projects for a Beginner.
-- Do NOT generate "Easy" projects for an Advanced student.
-
-Criteria:
-- Must be academically rigorous for a group of 3-4 engineering students.
-- Descriptions must be highly professional, technical, and under 15 words.
-- "suitability" should explain why this specific project is appropriate for a ${prefs.semester}th-semester student at the ${prefs.skillLevel} level.
+STRICT INSTRUCTIONS:
+1. Generate 4 unique, industry-relevant project ideas.
+2. Every single project MUST be categorized as "${targetDifficulty}" difficulty.
+3. Each "suitability" field must explain the specific pedagogical value for a student at this exact stage of their engineering degree.
+4. Keep "shortDescription" under 12 words, using punchy engineering terminology.
 
 Return exactly 4 ideas in a JSON array.
 `;
@@ -96,10 +64,7 @@ Return exactly 4 ideas in a JSON array.
             id: { type: Type.STRING },
             title: { type: Type.STRING },
             shortDescription: { type: Type.STRING },
-            difficulty: { 
-              type: Type.STRING,
-              description: `Must be exactly "${targetDifficulty}"`
-            },
+            difficulty: { type: Type.STRING },
             suitability: { type: Type.STRING }
           },
           required: ["id", "title", "shortDescription", "difficulty", "suitability"]
@@ -111,9 +76,6 @@ Return exactly 4 ideas in a JSON array.
   return robustJsonParse(response.text);
 }
 
-/**
- * Generates a deep-dive project roadmap and viva preparation guide.
- */
 export async function generateProjectDeepDive(
   summary: ProjectSummary,
   prefs: UserPreferences
@@ -121,21 +83,31 @@ export async function generateProjectDeepDive(
   const ai = getAiClient();
 
   const prompt = `
-Act as a Senior Project Architect. Provide a full technical blueprint for the project: "${summary.title}".
+As the ProjectPath Senior Mentor, provide a comprehensive Technical Blueprint for: "${summary.title}".
+Student Background: Semester ${prefs.semester}, ${prefs.branch}, ${prefs.skillLevel} level.
 
-Academic Context: Semester ${prefs.semester}, ${prefs.branch}
-Target Difficulty Level: ${summary.difficulty} (Skill Level: ${prefs.skillLevel})
-Brief Objective: ${summary.shortDescription}
+Focus on:
+- Production-grade architecture.
+- A 6-8 week "Sprint-based" roadmap.
+- High-stakes Viva (oral exam) preparation.
 
-Return a JSON object containing:
-1. intro: A 1-line encouraging architectural summary.
-2. fullDescription: A detailed 2-paragraph technical objective covering architecture and goals.
-3. techStack: Array of categories (e.g., Core Engine, Interface, Database) and specific professional tools/frameworks.
-4. roadmap: A 6-8 week breakdown with tasks and 3 bullet points of technical sub-tasks each.
-5. resources: 3 helpful learning assets/titles.
-6. vivaPrep: 5 professional viva questions, 5 core engineering concepts, 3 common failure modes (mistakes), and 4 evaluator expectations.
-7. presentationTips: 3 strategic tips for the final demonstration.
-8. closing: A final 1-line motivating professional sign-off.
+Return JSON:
+{
+  "title": "${summary.title}",
+  "intro": "Mentor's overview of why this project matters in the current industry.",
+  "fullDescription": "Deep technical objective and architectural vision (2 paragraphs).",
+  "techStack": [{"category": "string", "items": ["string"]}],
+  "roadmap": [{"week": "Week X", "task": "Heading", "details": ["Technical sub-task 1", "2", "3"]}],
+  "resources": [{"title": "string", "type": "Video|Repo|Doc", "link": "string"}],
+  "vivaPrep": {
+    "questions": ["High-level conceptual question", "Implementation detail question", "Scenario-based question", "Optimization question", "Security/Scaling question"],
+    "concepts": ["Keyword 1", "Keyword 2", ...],
+    "mistakes": ["Common error 1", ...],
+    "evaluatorExpectations": ["Expectation 1", ...]
+  },
+  "presentationTips": ["Presentation Tip 1", ...],
+  "closing": "Final words of encouragement from the Mentor."
+}
 `;
 
   const response = await ai.models.generateContent({
@@ -170,17 +142,6 @@ Return a JSON object containing:
               }
             }
           },
-          resources: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                title: { type: Type.STRING },
-                type: { type: Type.STRING },
-                link: { type: Type.STRING }
-              }
-            }
-          },
           vivaPrep: {
             type: Type.OBJECT,
             properties: {
@@ -190,10 +151,8 @@ Return a JSON object containing:
               evaluatorExpectations: { type: Type.ARRAY, items: { type: Type.STRING } }
             }
           },
-          presentationTips: { type: Type.ARRAY, items: { type: Type.STRING } },
           closing: { type: Type.STRING }
-        },
-        required: ["title", "intro", "fullDescription", "techStack", "roadmap", "vivaPrep", "closing"]
+        }
       }
     }
   });

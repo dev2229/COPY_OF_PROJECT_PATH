@@ -1,5 +1,7 @@
 {
-  "name": "Copy of Copy of ProjectPath - Engineering Project Mentor",
-  "description": "An AI-powered project mentor designed to help engineering students plan their semester and final-year projects with clear roadmaps, tech stacks, and viva preparation tips.",
-  "requestFramePermissions": []
+  "name": "ProjectPath - Engineering Project Mentor",
+  "description": "An AI-powered mentor for engineering students. Generates technical roadmaps, optimized tech stacks, and comprehensive viva preparation guides.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
 }
