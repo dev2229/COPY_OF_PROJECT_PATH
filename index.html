@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProjectPath - Engineering Project Guide</title>
+    <script>
+      // Non-destructive shim to ensure 'process.env' exists without overwriting system values
+      window.global = window;
+      if (!window.process) window.process = {};
+      if (!window.process.env) window.process.env = {};
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --brand-orange: #ff5c00; --bg-dark: #050505; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-dark); color: #f8fafc; margin: 0; min-height: 100vh; }
+        .premium-bg { background-color: var(--bg-dark); min-height: 100vh; position: relative; overflow-x: hidden; }
+        .horizon-glow { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 150vw; height: 80vh; background: radial-gradient(circle at 50% 100%, rgba(255, 92, 0, 0.15) 0%, transparent 60%); pointer-events: none; z-index: 1; }
+        .horizon-line { position: absolute; top: 45%; left: 50%; transform: translateX(-50%); width: 200%; height: 1px; background: linear-gradient(90deg, transparent, var(--brand-orange), transparent); opacity: 0.3; z-index: 2; }
+        .grid-pattern { position: absolute; inset: 0; background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px); background-size: 4rem 4rem; mask-image: radial-gradient(ellipse 60% 50% at 50% 0%, #000 70%, transparent 100%); pointer-events: none; opacity: 0.6; z-index: 0; }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "@google/genai": "https://esm.sh/@google/genai@1.3.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root">
+      <div style="background: #050505; color: #ff5c00; font-family: 'Plus Jakarta Sans', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center;">
+        <div style="font-weight: 900; font-size: 24px; letter-spacing: -0.05em; margin-bottom: 10px;">PROJECT<span style="color: white;">PATH</span></div>
+        <div style="font-size: 10px; font-weight: 800; letter-spacing: 0.4em; opacity: 0.5;">INITIALIZING ARCHITECTURAL ENGINE...</div>
+      </div>
+    </div>
+    <script type="module" src="index.tsx"></script>
+</body>
+</html>
